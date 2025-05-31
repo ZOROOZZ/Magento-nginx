@@ -1,0 +1,67 @@
+version: "3.7"
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: magento-php
+    volumes:
+      - ./magento:/var/www/html
+    ports:
+      - "9000:9000"
+    networks:
+      - magento-network
+
+  nginx:
+    image: nginx:latest
+    container_name: magento-nginx
+    volumes:
+      - ./magento:/var/www/html
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - php
+    networks:
+      - magento-network
+
+  db:
+    image: mysql:8.0
+    container_name: magento-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: magento
+      MYSQL_USER: magento
+      MYSQL_PASSWORD: magentopassword
+    command: --log-bin-trust-function-creators=1
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - magento-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - magento-network
+
+networks:
+  magento-network:
+
+volumes:
+  dbdata:
+  esdata:
