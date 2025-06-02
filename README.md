@@ -50,6 +50,7 @@ First-time setup requires Magento authentication keys.
 ``` bash
 docker-compose up -d --build
 bash setup.sh
+docker-compose up nginx
 ```
 Magento will be accessible at: http://localhost/
 ---
